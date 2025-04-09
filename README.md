@@ -1,5 +1,6 @@
 # ppr-projekt
 Zadanie indywidualne w ramach przedmiotu Podstawy Przetwarzania Rozproszonego na WAT
+
 *Tymoteusz Kościuszko, WCY22KC2S1*
 
 ## Wybór technologii
