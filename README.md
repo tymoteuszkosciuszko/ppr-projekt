@@ -9,7 +9,7 @@ Zadanie indywidualne w ramach przedmiotu Podstawy Przetwarzania Rozproszonego na
 - 🔄 Proces 2: **PHP**
 - ⚙️ Mechanizm 2: **Socket/UDP**
 - 🔄 Proces 3: **Python**
-- ⚙️ Mechanizm 3: **SOAP**
+- ⚙️ Mechanizm 3: **XML-RPC**
 - ⬇️ Proces 4 (wyjście): **Perl**
 
-Numer w Excelu: 59
+Numer w Excelu: 496
