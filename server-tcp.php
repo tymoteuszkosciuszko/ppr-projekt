@@ -1,62 +1,55 @@
 #!/usr/bin/php
-
 <?php
-#===================================================================
-# Wersja z wywolaniami zblizonymi do C
-#===================================================================
 
-# zmienne predefiniowane -------------------------------------------
 $host = "127.0.0.1";
 $port = 12345;
+$udp_host = "127.0.0.1";
+$udp_port = 54321;
 
-# tworzymy gniazdo -------------------------------------------------
-if( ! ( $server = socket_create( AF_INET, SOCK_STREAM, SOL_TCP ) ) ){
-    print "socket_create(): " 		. socket_strerror( socket_last_error( $server ) ) . "\n";
-    exit( 1 );
-}
+$server = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+socket_set_option($server, SOL_SOCKET, SO_REUSEADDR, 1);
+socket_bind($server, $host, $port);
+socket_listen($server, 5);
 
-# ustawiamy opcje gniazda (REUSEADDR) ------------------------------
-if( ! socket_set_option($server, SOL_SOCKET, SO_REUSEADDR, 1) ) {
-    print "socket_set_option(): " 	. socket_strerror(socket_last_error( $server ) ) . "\n";
-    exit( 1 );
-}
+$udp = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+socket_set_option($udp, SOL_SOCKET, SO_RCVTIMEO, ["sec" => 2, "usec" => 0]); // timeout 2 sekundy
 
-# mapujemy gniazdo (na port) ---------------------------------------
-if( ! socket_bind( $server, $host, $port ) ){
-    print "socket_bind(): " 		. socket_strerror( socket_last_error( $server ) ) . "\n";
-    exit( 1 );
-}
-
-# ustawiamy gniazdo w tryb nasluchiwania ---------------------------
-if( ! socket_listen( $server, 5 ) ){
-    print "socket_listen(): " 		. socket_strerror( socket_last_error( $server ) ) . "\n";
-    exit( 1 );
-}
-
-# obslugujemy kolejnych klientow, jak tylko sie podlacza -----------
-while( $client = socket_accept( $server ) ){
-
+while ($client = socket_accept($server)) {
     $pid = pcntl_fork();
     if ($pid == -1) {
         print "błąd pcntl_fork()\n";
-        exit( 1 );
+        exit(1);
     } elseif ($pid) {
-        # Proces rodzica
         socket_close($client);
     } else {
-        # Proces dziecka
-        socket_getpeername( $client, $addr, $port );
-
-        # Odczytujemy PID klienta
+        socket_getpeername($client, $addr, $port);
         $client_pid = socket_read($client, 5);
         $filename = trim($client_pid) . ".txt";
-        $file = fopen($filename, 'w');
+        $file = fopen($filename, 'wb');
         print "Adres: $addr Port: $port PID: $client_pid\n";
 
-        while ($data = socket_read($client, 1)) {
-            $hex = bin2hex($data);
-            fwrite($file, "Odebrano: $data Hex: $hex\n");
-            print("Odebrano: $data Hex: $hex\n");
+        while (true) {
+            $data = socket_read($client, 1);
+            if ($data === false || $data === '') break;
+
+            // fwrite($file, $data); // lokalny zapis opcjonalnie
+
+            $ack_received = false;
+            while (!$ack_received) {
+                socket_sendto($udp, $data, 1, 0, $udp_host, $udp_port);
+
+                $ack = '';
+                $from = '';
+                $from_port = 0;
+                $bytes = @socket_recvfrom($udp, $ack, 3, 0, $from, $from_port);
+
+                if ($bytes > 0 && $ack === 'ACK') {
+                    $ack_received = true;
+                } else {
+                    print "[WARN] Brak ACK – ponawiam wysyłkę\n";
+                    usleep(100000); // 100 ms opóźnienia
+                }
+            }
         }
 
         fclose($file);
@@ -64,7 +57,5 @@ while( $client = socket_accept( $server ) ){
         exit(0);
     }
 }
-#-------------------------------------------------------------------
-socket_close( $server );
-#===================================================================
+socket_close($server);
 ?>
