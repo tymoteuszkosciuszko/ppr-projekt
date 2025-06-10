@@ -25,7 +25,7 @@ while ($client = socket_accept($server)) {
         socket_getpeername($client, $addr, $port);
         $client_pid = socket_read($client, 5);
         $filename = trim($client_pid) . ".txt";
-        $file = fopen($filename, 'wb');
+        //$file = fopen($filename, 'wb');
         print "Adres: $addr Port: $port PID: $client_pid\n";
 
         while (true) {
