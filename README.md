@@ -13,3 +13,6 @@ Zadanie indywidualne w ramach przedmiotu Podstawy Przetwarzania Rozproszonego na
 - ⬇️ Proces 4 (wyjście): **Perl**
 
 Numer w Excelu: 496
+
+## Sposób uruchamiania
+Programy są pozanywane względem kolejności jaką przebędą dane od wejścia do wyjścia. Po skompilowaniu programu C, należy uruchamiać skrypty w odwrotnej kolejności, tj. począwszy od skryptu Perl *4-xml-stdout.pl*. Jego wyjście można przekierować poprzez STDOUT do pliku oraz porównać go potem z plikiem oryginalnym.
